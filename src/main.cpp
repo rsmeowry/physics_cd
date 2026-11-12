@@ -11,10 +11,17 @@ int main() {
   SetTargetFPS(FPS);
   World world;
   Box wall(Vector2 { 600, 0 }, Vector2 { 10, 2000 }, 1, GREEN);
-  Box box(Vector2 { 200, 200 }, Vector2 { 25, 25 }, 1, WHITE);
-  box.velocity = Vector2 { 2000, -500 };
+
+  // 10 fast boxes
+  for (int i = 0; i < 10; i++) {
+    float r = (rand() % 100) / 100.;
+    Box box(Vector2 { 200, 200 }, Vector2 { 15, 15 }, 1, WHITE);
+    r = (rand() % 100) / 100.;
+    float r2 = (rand() % 100) / 100.;
+    box.velocity = Vector2 { 1200 + r * 1200, -200 + r * (-500) };
+    world.SpawnFast(box);
+  }
   world.SetMode(Discrete60);
-  world.SpawnFast(box);
   world.SpawnStatic(wall);
 
   float tAccum = 0.;
