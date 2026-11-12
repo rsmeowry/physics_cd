@@ -16,6 +16,8 @@ private:
   std::vector<Box> fast { };
   Vector2 gravity{ 0, 980 };
 
+  float restitution = 0.5f;
+
   // stats
   int regularStepsPerFrame = 0;
   int fastStepsPerFrame = 0;
@@ -41,6 +43,7 @@ public:
   void Simulate(float dt);
   void DrawBoxes(float alpha);
   void DrawStats();
+  void CollideStatics(Box& box);
 };
 
 

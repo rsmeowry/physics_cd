@@ -9,6 +9,7 @@ void World::SimulateSlow(float dt) {
     box.velocity = Vector2Add(box.velocity, Vector2Scale(gravity, dt));
     box.position = Vector2Add(box.position, Vector2Scale(box.velocity, dt));
     box.lifetime++;
+    CollideStatics(box);
   }
   std::erase_if(slow, [this](const Box& b) {
     return b.lifetime > SLOW_BOX_LIFETIME_SECS * regularSimRate;
@@ -20,9 +21,10 @@ void World::SimulateFast(float dt) {
     box.velocity = Vector2Add(box.velocity, Vector2Scale(gravity, dt));
     box.position = Vector2Add(box.position, Vector2Scale(box.velocity, dt));
     box.lifetime++;
+    CollideStatics(box);
   }
   std::erase_if(fast, [this](const Box& b) {
-    return b.lifetime > SLOW_BOX_LIFETIME_SECS * regularSimRate;
+    return b.lifetime > FAST_BOX_LIFETIME_SECS   * regularSimRate;
   });
   fastStepsPerFrame++;
 }
@@ -58,4 +60,24 @@ void World::DrawStats() {
 
   regularStepsPerFrame = 0;
   fastStepsPerFrame = 0;
+}
+
+void World::CollideStatics(Box &box) {
+  for (auto& s : statics) {
+    Rectangle o = GetCollisionRec(box.AsRect(), s.AsRect());
+    if (o.width <= 0 || o.height <= 0) continue;
+
+    // determining normal
+    if (o.width < o.height) {
+      float dir = (box.position.x < s.position.x) ? -1.0f : 1.0f;
+      box.position.x += dir * o.width;
+      if (box.velocity.x * dir < 0)
+        box.velocity.x *= -restitution;
+    } else {
+      float dir = (box.position.y < s.position.y) ? -1.0f : 1.0f;
+      box.position.y += dir * o.height;
+      if (box.velocity.y * dir < 0)
+        box.velocity.y *= -restitution;
+    }
+  }
 }

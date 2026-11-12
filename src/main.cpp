@@ -10,8 +10,11 @@ int main() {
   InitWindow(800, 600, "Physics");
   SetTargetFPS(FPS);
   World world;
-  Box box(Vector2 { 200, 200 }, Vector2 { 50, 50 }, 1, RED);;
+  Box wall(Vector2 { 600, 0 }, Vector2 { 10, 2000 }, 1, GREEN);
+  Box box(Vector2 { 200, 200 }, Vector2 { 25, 25 }, 1, RED);
+  box.velocity = Vector2 { 2000, -500 };
   world.SpawnFast(box);
+  world.SpawnStatic(wall);
 
   float tAccum = 0.;
   float fixedDt = 1. / static_cast<float>(world.regularSimRate);

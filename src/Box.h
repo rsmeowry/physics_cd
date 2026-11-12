@@ -22,6 +22,15 @@ struct Box {
     this->mass = mass;
     this->color = color;
   }
+
+  Rectangle AsRect() {
+    return Rectangle {
+      position.x,
+      position.y,
+      extent.x,
+      extent.y
+    };
+  }
 };
 
 
