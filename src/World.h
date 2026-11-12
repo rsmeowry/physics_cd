@@ -9,6 +9,12 @@
 #define FAST_BOX_LIFETIME_SECS 8
 #define SLOW_BOX_LIFETIME_SECS 16
 
+enum SimulationMode {
+  Discrete60,
+  Multi240,
+  CCD60
+};
+
 class World {
 private:
   std::vector<Box> statics { };
@@ -17,16 +23,39 @@ private:
   Vector2 gravity{ 0, 980 };
 
   float restitution = 0.5f;
+  SimulationMode simulationMode = Discrete60;
 
   // stats
   int regularStepsPerFrame = 0;
   int fastStepsPerFrame = 0;
   int tunnelCount = 0;
   int ccdHits = 0;
+  int statFrames = 0;
+  float statTime = 0;
+  float regAvg = 0;
+  float fastAvg = 0;
 
   void SimulateFast(float dt);
   void SimulateSlow(float dt);
 public:
+  void SetMode(SimulationMode simulationMode) {
+    this->simulationMode = simulationMode;
+    switch (simulationMode) {
+      case Discrete60:
+        this->fastSimRate = 60;
+        this->regularSimRate = 60;
+        break;
+      case Multi240:
+        this->fastSimRate = 240;
+        this->regularSimRate = 60;
+        break;
+      case CCD60:
+        this->fastSimRate = 60;
+        this->regularSimRate = 60;
+        break;
+    }
+  }
+
   int regularSimRate = 60;
   int fastSimRate = 240;
 

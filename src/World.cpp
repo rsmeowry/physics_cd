@@ -18,10 +18,18 @@ void World::SimulateSlow(float dt) {
 }
 void World::SimulateFast(float dt) {
   for (auto& box : fast) {
+    bool wasLeftOfTheWall = (box.position.x + box.extent.x / 2) < (statics[0].position.x + statics[0].extent.x);
+
     box.velocity = Vector2Add(box.velocity, Vector2Scale(gravity, dt));
     box.position = Vector2Add(box.position, Vector2Scale(box.velocity, dt));
     box.lifetime++;
     CollideStatics(box);
+
+    // checking whether we tunnelled
+    if (wasLeftOfTheWall && (box.position.x + box.extent.x / 2) > (statics[0].position.x + statics[0].extent.x)) {
+      box.color = RED;
+      tunnelCount += 1;
+    }
   }
   std::erase_if(fast, [this](const Box& b) {
     return b.lifetime > FAST_BOX_LIFETIME_SECS   * regularSimRate;
@@ -52,14 +60,20 @@ void World::DrawBoxes(float alpha) {
 }
 
 void World::DrawStats() {
-  constexpr int offset = 25;
-  DrawText(std::format("reg spf: {0}", regularStepsPerFrame).c_str(), 25, 50, 15, RAYWHITE);
-  DrawText(std::format("fst spf: {0}", fastStepsPerFrame).c_str(), 25, 50 + offset, 15, RAYWHITE);
-  DrawText(std::format("tunnels: {0}", tunnelCount).c_str(), 25, 50 + offset * 2, 15, RAYWHITE);
-  DrawText(std::format("ccd hit: {0}", ccdHits).c_str(), 25, 50 + offset * 3, 15, RAYWHITE);
+  statFrames++;
+  statTime += GetFrameTime();
+  if (statTime >= 1.0f) {
+    regAvg = static_cast<float>(regularStepsPerFrame) / statFrames;
+    fastAvg = static_cast<float>(fastStepsPerFrame) / statFrames;
+    regularStepsPerFrame = fastStepsPerFrame = statFrames = 0;
+    statTime = 0;
+  }
 
-  regularStepsPerFrame = 0;
-  fastStepsPerFrame = 0;
+  constexpr int offset = 25;
+  DrawText(std::format("reg spf: {:.2f}", regAvg).c_str(), 25, 50, 15, RAYWHITE);
+  DrawText(std::format("fst spf: {:.2f}", fastAvg).c_str(), 25, 50 + offset, 15, RAYWHITE);
+  DrawText(std::format("tunnels: {}", tunnelCount).c_str(), 25, 50 + offset * 2, 15, RAYWHITE);
+  DrawText(std::format("ccd hit: {}", ccdHits).c_str(), 25, 50 + offset * 3, 15, RAYWHITE);
 }
 
 void World::CollideStatics(Box &box) {
