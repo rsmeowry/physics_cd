@@ -35,6 +35,10 @@ private:
   float regAvg = 0;
   float fastAvg = 0;
 
+  double physMs = 0;
+  double msPerFrame = 0;
+  double msPerStep = 0;
+
   void SimulateFast(float dt);
   void SimulateSlow(float dt);
   bool SweepAABB(Box& a, Vector2 dir, Box& b, float& tHit, Vector2& normal);
@@ -76,6 +80,9 @@ public:
     slow.clear();
     ccdHits = 0;
     tunnelCount = 0;
+    physMs = 0;
+    msPerFrame = 0;
+    msPerStep = 0;
   }
 
   void Simulate(float dt);

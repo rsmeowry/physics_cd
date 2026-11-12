@@ -1,6 +1,7 @@
 #include "World.h"
 
 #include <algorithm>
+#include <chrono>
 
 #include "raymath.h"
 
@@ -116,6 +117,7 @@ void World::SimulateFast(float dt) {
 }
 
 void World::Simulate(float dt) {
+  auto t0 = std::chrono::steady_clock::now();
   for (auto& b : slow)
     b.prevPosition = b.position;
   for (auto& b : fast)
@@ -126,6 +128,8 @@ void World::Simulate(float dt) {
   auto fastSub = fastSimRate / regularSimRate;
   for (int i = 0; i < fastSub; ++i)
     SimulateFast(dt / static_cast<float>(fastSub));
+
+  physMs += std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t0).count();
 }
 
 void World::DrawBoxes(float alpha) {
@@ -141,10 +145,19 @@ void World::DrawStats() {
   statFrames++;
   statTime += GetFrameTime();
   if (statTime >= 1.0f) {
+    double f = physMs / statFrames;
+    double s = regularStepsPerFrame ? physMs / regularStepsPerFrame : 0;
+    constexpr double k = 0.2;
+    msPerFrame = msPerFrame == 0 ? f : msPerFrame * (1 - k) + f * k;
+    msPerStep = msPerStep  == 0 ? s : msPerStep  * (1 - k) + s * k;
+
     regAvg = static_cast<float>(regularStepsPerFrame) / statFrames;
     fastAvg = static_cast<float>(fastStepsPerFrame) / statFrames;
-    regularStepsPerFrame = fastStepsPerFrame = statFrames = 0;
+    regularStepsPerFrame = 0;
+    fastStepsPerFrame = 0;
+    statFrames = 0;
     statTime = 0;
+    physMs = 0;
   }
 
   constexpr int offset = 25;
@@ -152,6 +165,7 @@ void World::DrawStats() {
   DrawText(std::format("fst spf: {:.2f}", fastAvg).c_str(), 25, 50 + offset, 15, RAYWHITE);
   DrawText(std::format("tunnels: {}", tunnelCount).c_str(), 25, 50 + offset * 2, 15, RAYWHITE);
   DrawText(std::format("ccd hit: {}", ccdHits).c_str(), 25, 50 + offset * 3, 15, RAYWHITE);
+  DrawText(std::format("phys: {:.4f} mcspf {:.4f} mcsps", msPerFrame * 1000, msPerStep * 1000).c_str(), 25, 50 + offset * 4, 15, RAYWHITE);
 }
 
 void World::CollideStatics(Box &box) {
