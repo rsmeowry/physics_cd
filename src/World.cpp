@@ -24,7 +24,7 @@ void World::SimulateFast(float dt) {
   std::erase_if(fast, [this](const Box& b) {
     return b.lifetime > SLOW_BOX_LIFETIME_SECS * regularSimRate;
   });
-  regularStepsPerFrame++;
+  fastStepsPerFrame++;
 }
 
 void World::Simulate(float dt) {
@@ -41,16 +41,12 @@ void World::Simulate(float dt) {
 }
 
 void World::DrawBoxes(float alpha) {
-  for (auto box: this->statics) {
-    DrawRectangle(box.position.x, box.position.y, box.extent.x, box.extent.y, box.color);
-  }
-  for (auto box: this->slow) {
-    DrawRectangle(box.position.x, box.position.y, box.extent.x , box.extent.y, box.color);
-  }
-  for (auto box: this->fast) {
-    DrawRectangle(box.position.x, box.position.y, box.extent.x, box.extent.y, box.color);
-  }
-
+  for (auto& b : statics)
+    DrawRectangleV(b.position, b.extent, b.color);
+  for (auto& b : slow)
+    DrawRectangleV(Vector2Lerp(b.prevPosition, b.position, alpha), b.extent, b.color);
+  for (auto& b : fast)
+    DrawRectangleV(Vector2Lerp(b.prevPosition, b.position, alpha), b.extent, b.color);
 }
 
 void World::DrawStats() {

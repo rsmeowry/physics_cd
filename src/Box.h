@@ -10,7 +10,7 @@ struct Box {
   Vector2 prevPosition;
   Vector2 position;
   Vector2 extent;
-  Vector2 velocity;
+  Vector2 velocity { 0, 0 };
   float mass;
   Color color = RED;
   uint32_t lifetime = 0;
