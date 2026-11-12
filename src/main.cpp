@@ -8,8 +8,6 @@ void BuildCCDScene(World& world);
 void BuildMRScene(World& world);
 
 int main() {
-  std::cout << "Hello, World!" << std::endl;
-
   InitWindow(800, 600, "Physics");
   SetTargetFPS(FPS);
   World world;
