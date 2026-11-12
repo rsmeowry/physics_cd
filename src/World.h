@@ -22,6 +22,8 @@ private:
   int tunnelCount = 0;
   int ccdHits = 0;
 
+  void SimulateFast(float dt);
+  void SimulateSlow(float dt);
 public:
   int regularSimRate = 60;
   int fastSimRate = 240;
@@ -36,9 +38,8 @@ public:
     fast.push_back(box);
   }
 
-  void SimulateFast();
-  void SimulateSlow();
-  void DrawBoxes();
+  void Simulate(float dt);
+  void DrawBoxes(float alpha);
   void DrawStats();
 };
 

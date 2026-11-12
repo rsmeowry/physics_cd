@@ -13,26 +13,22 @@ int main() {
   Box box(Vector2 { 200, 200 }, Vector2 { 50, 50 }, 1, RED);;
   world.SpawnFast(box);
 
-  auto slowSimsPerFrame = static_cast<int>(static_cast<float>(world.regularSimRate) / static_cast<float>(FPS));
-  auto fastSimsPerFrame = static_cast<int>(static_cast<float>(world.fastSimRate) / static_cast<float>(FPS));
-
-  std::cout << " " << fastSimsPerFrame << " " << slowSimsPerFrame << std::endl;
+  float tAccum = 0.;
+  float fixedDt = 1. / static_cast<float>(world.regularSimRate);
 
   while (!WindowShouldClose()) {
-    // simulating slow
-    for (int i = 0; i < slowSimsPerFrame; i++) {
-      world.SimulateSlow();
-    }
+    tAccum += GetFrameTime();
 
-    // simulating fast
-    for (int i = 0; i < fastSimsPerFrame; i++) {
-      world.SimulateFast();
+    while (tAccum >= fixedDt) {
+      world.Simulate(fixedDt);
+      tAccum -= fixedDt;
     }
+    float alpha = tAccum / fixedDt; // how much longer till next step?
 
     BeginDrawing();
 
     ClearBackground(BLACK);
-    world.DrawBoxes();
+    world.DrawBoxes(alpha);
     world.DrawStats();
 
     EndDrawing();

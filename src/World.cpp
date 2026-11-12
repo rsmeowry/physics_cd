@@ -2,46 +2,45 @@
 
 #include <algorithm>
 
-void World::SimulateSlow() {
-  for (auto &box: this->slow) {
-    // js testing
-    box.velocity.x += GetFrameTime() * gravity.x;
-    box.velocity.y += GetFrameTime() * gravity.y;
-    box.prevPosition = box.position;
-    box.position.x += GetFrameTime() * box.velocity.x;
-    box.position.y += GetFrameTime() * box.velocity.y;
-    box.lifetime += 1;
-  }
+#include "raymath.h"
 
-  // sweeping dead boxes
-  auto got = std::remove_if(this->slow.begin(), this->slow.end(),
-                        [this](Box b) {
-                          return b.lifetime > SLOW_BOX_LIFETIME_SECS * this->regularSimRate;
-                        });
-  this->slow.erase(got, this->slow.end());
-  this->regularStepsPerFrame += 1;
+void World::SimulateSlow(float dt) {
+  for (auto& box : slow) {
+    box.velocity = Vector2Add(box.velocity, Vector2Scale(gravity, dt));
+    box.position = Vector2Add(box.position, Vector2Scale(box.velocity, dt));
+    box.lifetime++;
+  }
+  std::erase_if(slow, [this](const Box& b) {
+    return b.lifetime > SLOW_BOX_LIFETIME_SECS * regularSimRate;
+  });
+  regularStepsPerFrame++;
 }
-void World::SimulateFast() {
-  for (auto &box: this->fast) {
-    // js testing
-    box.velocity.x += GetFrameTime() * gravity.x;
-    box.velocity.y += GetFrameTime() * gravity.y;
-    box.prevPosition = box.position;
-    box.position.x += GetFrameTime() * box.velocity.x;
-    box.position.y += GetFrameTime() * box.velocity.y;
-    box.lifetime += 1;
+void World::SimulateFast(float dt) {
+  for (auto& box : fast) {
+    box.velocity = Vector2Add(box.velocity, Vector2Scale(gravity, dt));
+    box.position = Vector2Add(box.position, Vector2Scale(box.velocity, dt));
+    box.lifetime++;
   }
-
-  // sweeping dead boxes
-  auto got = std::remove_if(this->fast.begin(), this->fast.end(),
-                        [this](Box b) {
-                          return b.lifetime > FAST_BOX_LIFETIME_SECS * this->fastSimRate;
-                        });
-  this->fast.erase(got, this->fast.end());
-  this->fastStepsPerFrame += 1;
+  std::erase_if(fast, [this](const Box& b) {
+    return b.lifetime > SLOW_BOX_LIFETIME_SECS * regularSimRate;
+  });
+  regularStepsPerFrame++;
 }
 
-void World::DrawBoxes() {
+void World::Simulate(float dt) {
+  for (auto& b : slow)
+    b.prevPosition = b.position;
+  for (auto& b : fast)
+    b.prevPosition = b.position;
+
+  SimulateSlow(dt);
+
+  auto fastSub = fastSimRate / regularSimRate;
+  for (int i = 0; i < fastSub; ++i)
+    SimulateFast(dt / static_cast<float>(fastSub));
+}
+
+void World::DrawBoxes(float alpha) {
   for (auto box: this->statics) {
     DrawRectangle(box.position.x, box.position.y, box.extent.x, box.extent.y, box.color);
   }
