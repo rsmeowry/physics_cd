@@ -30,23 +30,34 @@ int main() {
       srand(1);
       world.Clear();
       BuildMRScene(world);
+      world.SetScene("Multi / room");
     }
     if (IsKeyPressed(KEY_TWO)) {
       srand(1);
       world.Clear();
       BuildCCDScene(world);
+      world.SetScene("CCD / wall");
     }
     if (IsKeyPressed(KEY_THREE)) {
       srand(1);
       world.Clear();
       BuildMRScene(world);
       world.SetMode(Discrete60);
+      world.SetScene("Discrete / room");
     }
     if (IsKeyPressed(KEY_FOUR)) {
       srand(1);
       world.Clear();
       BuildCCDScene(world);
       world.SetMode(Discrete60);
+      world.SetScene("Discrete / wall");
+    }
+    if (IsKeyPressed(KEY_FIVE)) {
+      srand(1);
+      world.Clear();
+      BuildMRScene(world);
+      world.SetMode(CCD60);
+      world.SetScene("CCD / room");
     }
 
     BeginDrawing();

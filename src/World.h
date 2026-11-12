@@ -39,11 +39,16 @@ private:
   double msPerFrame = 0;
   double msPerStep = 0;
 
+  std::string scene;
+
   void SimulateFast(float dt);
   void SimulateSlow(float dt);
   bool SweepAABB(Box& a, Vector2 dir, Box& b, float& tHit, Vector2& normal);
   void SimulateCCD(Box& box, float dt);
 public:
+  void SetScene(std::string scene) {
+    this->scene = scene;
+  }
   void SetMode(SimulationMode simulationMode) {
     this->simulationMode = simulationMode;
     switch (simulationMode) {

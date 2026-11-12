@@ -161,6 +161,7 @@ void World::DrawStats() {
   }
 
   constexpr int offset = 25;
+  DrawText(std::format("scene: {}", scene).c_str(), 25, 25, 15, RAYWHITE);
   DrawText(std::format("reg spf: {:.2f}", regAvg).c_str(), 25, 50, 15, RAYWHITE);
   DrawText(std::format("fst spf: {:.2f}", fastAvg).c_str(), 25, 50 + offset, 15, RAYWHITE);
   DrawText(std::format("tunnels: {}", tunnelCount).c_str(), 25, 50 + offset * 2, 15, RAYWHITE);
