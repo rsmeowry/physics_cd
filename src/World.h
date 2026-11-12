@@ -37,6 +37,8 @@ private:
 
   void SimulateFast(float dt);
   void SimulateSlow(float dt);
+  bool SweepAABB(Box& a, Vector2 dir, Box& b, float& tHit, Vector2& normal);
+  void SimulateCCD(Box& box, float dt);
 public:
   void SetMode(SimulationMode simulationMode) {
     this->simulationMode = simulationMode;
@@ -67,6 +69,13 @@ public:
   }
   void SpawnFast(Box box) {
     fast.push_back(box);
+  }
+  void Clear() {
+    statics.clear();
+    fast.clear();
+    slow.clear();
+    ccdHits = 0;
+    tunnelCount = 0;
   }
 
   void Simulate(float dt);

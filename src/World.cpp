@@ -6,18 +6,6 @@
 
 void World::SimulateSlow(float dt) {
   for (auto& box : slow) {
-    box.velocity = Vector2Add(box.velocity, Vector2Scale(gravity, dt));
-    box.position = Vector2Add(box.position, Vector2Scale(box.velocity, dt));
-    box.lifetime++;
-    CollideStatics(box);
-  }
-  std::erase_if(slow, [this](const Box& b) {
-    return b.lifetime > SLOW_BOX_LIFETIME_SECS * regularSimRate;
-  });
-  regularStepsPerFrame++;
-}
-void World::SimulateFast(float dt) {
-  for (auto& box : fast) {
     bool wasLeftOfTheWall = (box.position.x + box.extent.x / 2) < (statics[0].position.x + statics[0].extent.x);
 
     box.velocity = Vector2Add(box.velocity, Vector2Scale(gravity, dt));
@@ -31,8 +19,98 @@ void World::SimulateFast(float dt) {
       tunnelCount += 1;
     }
   }
+  std::erase_if(slow, [this](const Box& b) {
+    return b.lifetime > SLOW_BOX_LIFETIME_SECS * regularSimRate;
+  });
+  regularStepsPerFrame++;
+}
+
+// https://github.com/srumut/raylib_Swept_AABB/blob/main/main.go
+
+bool DoSlab(float p, float dv, float lo, float hi, Vector2 axis, float& tEnter, float& tExit, Vector2& normal) {
+  if (std::fabs(dv) < 1e-8f)
+    return p > lo && p < hi; // miss
+  float t1 = (lo - p) / dv, t2 = (hi - p) / dv;
+  float tin = std::min(t1, t2);
+  float tout = std::max(t1, t2);
+  if (tin > tEnter) {
+    tEnter = tin;
+    normal = dv > 0 ? Vector2Negate(axis) : axis;
+  }
+  tExit = std::min(tExit, tout);
+  return true;
+}
+
+bool World::SweepAABB(Box &a, Vector2 dir, Box &b, float &tHit, Vector2 &normal) {
+  float tEnter = -INFINITY;
+  float tExit = INFINITY;
+  normal = {0, 0};
+
+  if (!DoSlab(a.position.x, dir.x, b.position.x - a.extent.x, b.position.x + b.extent.x, {1, 0}, tEnter, tExit, normal))
+    return false;
+  if (!DoSlab(a.position.y, dir.y, b.position.y - a.extent.y, b.position.y + b.extent.y, {0, 1}, tEnter, tExit, normal))
+    return false;
+  if (tEnter > tExit || tEnter < 0.f || tEnter > 1.f)
+    return false;
+
+  tHit = tEnter;
+
+  return true;
+}
+
+void World::SimulateCCD(Box &box, float dt) {
+  float remaining = dt;
+  for (int iter = 0; iter < 4 && remaining > 0; ++iter) {
+    Vector2 d = Vector2Scale(box.velocity, remaining);
+
+    float tMin = 1.f;
+    Vector2 nMin {};
+    bool hit = false;
+    for (auto& s : statics) { // getting closest hit among all statics
+      float t;
+      Vector2 normal;
+      if (SweepAABB(box, d, s, t, normal) && t < tMin) {
+        tMin = t;
+        nMin = normal;
+        hit = true;
+      }
+    }
+
+    box.position = Vector2Add(box.position, Vector2Scale(d, tMin)); // moving towards the point
+    if (!hit)
+      break;
+
+    box.position = Vector2Add(box.position, Vector2Scale(nMin, 1e-3f)); // offset
+    float vn = Vector2DotProduct(box.velocity, nMin); // reaction, velocity * normal
+    if (vn < 0)
+      box.velocity = Vector2Subtract(box.velocity, Vector2Scale(nMin, (1 + restitution) * vn));
+
+    remaining *= (1.f - tMin); // remainder of the step
+    ccdHits++;
+  }
+}
+
+void World::SimulateFast(float dt) {
+  for (auto& box : fast) {
+    bool wasLeftOfTheWall = (box.position.x + box.extent.x / 2) < (statics[0].position.x + statics[0].extent.x);
+
+    box.velocity = Vector2Add(box.velocity, Vector2Scale(gravity, dt));
+    if (this->simulationMode == CCD60) {
+      SimulateCCD(box, dt);
+    } else {
+      box.position = Vector2Add(box.position, Vector2Scale(box.velocity, dt));
+      CollideStatics(box);
+    }
+    box.lifetime++;
+
+    // checking whether we tunnelled
+    if (wasLeftOfTheWall && (box.position.x + box.extent.x / 2) > (statics[0].position.x + statics[0].extent.x)) {
+      box.color = RED;
+      tunnelCount += 1;
+    }
+  }
   std::erase_if(fast, [this](const Box& b) {
-    return b.lifetime > FAST_BOX_LIFETIME_SECS   * regularSimRate;
+    return b.lifetime > FAST_BOX_LIFETIME_SECS * fastSimRate;
   });
   fastStepsPerFrame++;
 }
