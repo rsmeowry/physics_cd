@@ -6,6 +6,7 @@
 
 void BuildCCDScene(World& world);
 void BuildMRScene(World& world);
+void BuildStackScene(World& world, bool);
 
 int main() {
   InitWindow(800, 600, "Physics");
@@ -57,6 +58,20 @@ int main() {
       world.SetMode(CCD60);
       world.SetScene("CCD / room");
     }
+    if (IsKeyPressed(KEY_SIX)) {
+      srand(1);
+      world.Clear();
+      BuildStackScene(world, true);
+      world.SetMode(Multi240);
+      world.SetScene("Multi240 / stack");
+    }
+    if (IsKeyPressed(KEY_SEVEN)) {
+      srand(1);
+      world.Clear();
+      BuildStackScene(world, false);
+      world.SetMode(Multi240);
+      world.SetScene("Multi240 / stable stack");
+    }
 
     BeginDrawing();
 
@@ -91,7 +106,7 @@ void BuildMRScene(World& world) {
   // 5 fast boxes
   for (int i = 0; i < 5; i++) {
     float r = (rand() % 100) / 100.;
-    Box box(Vector2 { 200, 200 }, Vector2 { 15, 15 }, 1, WHITE);
+    Box box(Vector2 { 200, static_cast<float>(200 + i * 15) }, Vector2 { 15, 15 }, 1, WHITE);
     r = (rand() % 100) / 100.;
     float r2 = (rand() % 100) / 100.;
     box.velocity = Vector2 { 1300 + r * 1000, -200 + r2 * (-500) };
@@ -115,6 +130,26 @@ void BuildMRScene(World& world) {
   Box lwall(Vector2 { 100, -200 }, Vector2 { 30, 2500 }, 1, GREEN);
   world.SpawnStatic(rwall);
   world.SpawnStatic(lwall);
+  world.SpawnStatic(floor);
+
+}
+
+void BuildStackScene(World& world, bool spawnBullet) {
+
+  // 1 fast box
+  Box box(Vector2 { -400, 300 }, Vector2 { 15, 15 }, 1, WHITE);
+  box.velocity = Vector2 { 2000, 0 };
+  if (spawnBullet)
+    world.SpawnFast(box);
+
+  // 20 slow boxes
+  for (int i = 0; i < 20; i++) {
+    Box box(Vector2 { static_cast<float>(600 + (i % 2) * 10), static_cast<float>(400 - i * 10) }, Vector2 { 15, 15 }, 1.5, GRAY);
+    world.SpawnSlow(box);
+  }
+  world.SetMode(Multi240);
+
+  Box floor(Vector2 { 0, 500 }, Vector2 { 1000, 30 }, 1, GREEN);
   world.SpawnStatic(floor);
 
 }

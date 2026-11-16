@@ -5,7 +5,7 @@
 
 #include "raymath.h"
 
-#define SLOW_RESOLUTIONS 4
+#define SLOW_RESOLUTIONS 10
 
 void World::SimulateSlow(float dt) {
   for (auto& box : slow) {
