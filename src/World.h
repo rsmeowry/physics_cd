@@ -1,6 +1,7 @@
 #ifndef PHYSICS_CD_WORLD_H
 #define PHYSICS_CD_WORLD_H
 #include <format>
+#include <math.h>
 #include <vector>
 
 #include "Box.h"
@@ -41,8 +42,10 @@ private:
 
   std::string scene;
 
-  void SimulateFast(float dt);
+  void SimulateFast(float dt, float t);
+  void ResolveFast(float t);
   void SimulateSlow(float dt);
+  void ResolveSlow();
   bool SweepAABB(Box& a, Vector2 dir, Box& b, float& tHit, Vector2& normal);
   void SimulateCCD(Box& box, float dt);
 public:
@@ -71,6 +74,7 @@ public:
   int fastSimRate = 240;
 
   void SpawnStatic(Box box) {
+    box.mass = INFINITY;
     statics.push_back(box);
   }
   void SpawnSlow(Box box) {
@@ -93,7 +97,7 @@ public:
   void Simulate(float dt);
   void DrawBoxes(float alpha);
   void DrawStats();
-  void CollideStatics(Box& box);
+  void CollidePair(Box &a, Box &b, bool moveB);
 };
 
 
