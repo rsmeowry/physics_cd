@@ -5,6 +5,8 @@
 
 #include "raymath.h"
 
+#define SLOW_RESOLUTIONS 4
+
 void World::SimulateSlow(float dt) {
   for (auto& box : slow) {
     bool wasLeftOfTheWall = (box.position.x + box.extent.x / 2) < (statics[0].position.x + statics[0].extent.x);
@@ -20,7 +22,9 @@ void World::SimulateSlow(float dt) {
     }
   }
 
-  ResolveSlow();
+  for (auto i = 0; i < SLOW_RESOLUTIONS; i++) {
+    ResolveSlow();
+  }
 
   std::erase_if(slow, [this](const Box& b) {
     return b.lifetime > SLOW_BOX_LIFETIME_SECS * regularSimRate;
